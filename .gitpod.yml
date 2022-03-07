@@ -1,0 +1,9 @@
+tasks:
+  - before: |
+      echo $GPG_KEY | base64 -d | gpg --import --pinentry=loopback --passphrase "$GPG_PASSPHRASE"
+      echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+      git config --local user.signingkey $GPG_KEY_ID
+      git config --local commit.gppsign true
+      pip install poetry
+      poetry config virtualenvs.create false
+      poetry install
