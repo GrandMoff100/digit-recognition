@@ -1,19 +1,18 @@
 import os
 import random
-import copy
 from pathlib import Path
-from typing import List, Generator, Any, Tuple
+from typing import Generator, List, Tuple
+
 from PIL import Image
+
 from .circles import Circle
 from .rectangles import Rectangle
-
 
 
 class Dataset:
     width: int
     minimum_shape_width: int
     output: Path = Path("shapes")
-        
 
     def __init__(self, width: int, minimum_shape_width: int = 4) -> None:
         self.width = width
@@ -21,7 +20,9 @@ class Dataset:
         os.system(f"rm -rf {self.output.absolute()}")
         self.output.mkdir()
 
-    def all_circle_sizes(self, prec: int) -> Tuple[List[List[List[int]]], List[Tuple[int, int]]]:
+    def all_circle_sizes(
+        self, prec: int
+    ) -> Tuple[List[List[List[int]]], List[Tuple[int, int]]]:
         circles, sizes = [], []
         i = self.minimum_shape_width
         while True:
@@ -34,7 +35,7 @@ class Dataset:
                 sizes.append(arr.size)
             i += 1
         return circles, sizes
-        
+
     def all_circles(self, prec: int = 5) -> Generator["Output", None, None]:
         circles, sizes = self.all_circle_sizes(prec)
         for circle, (w, h) in zip(circles, sizes):
@@ -55,7 +56,12 @@ class Dataset:
             for y in range(self.width - self.minimum_shape_width):
                 for width in range(self.minimum_shape_width, self.width - x):
                     for height in range(self.minimum_shape_width, self.width - y):
-                        yield Output(x, y, self.size, Input(Rectangle(width, height).fill()).pixels)
+                        yield Output(
+                            x,
+                            y,
+                            self.size,
+                            Input(Rectangle(width, height).fill()).pixels,
+                        )
 
     def generate_rectangles(self):
         path = self.output / "rectangles"
@@ -90,9 +96,8 @@ class Output:
         px = img.load()  # type: ignore
         for y, layer in enumerate(self.pixels):
             for x, value in enumerate(layer):
-                px[x,y] = value * 255
+                px[x, y] = value * 255
         img.save(location)
-
 
 
 class Input:
@@ -100,7 +105,7 @@ class Input:
 
     def __init__(self, pixels: List[List[int]]) -> None:
         self.pixels = self.trim(pixels)
-    
+
     def trim(self, shape: List[List[int]], depth: int = 0) -> List[List[int]]:
         trim_further = 1 not in shape[0] or 1 not in shape[-1]
         if 1 not in shape[0]:

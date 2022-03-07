@@ -1,8 +1,7 @@
 import math
-import time
 from decimal import Decimal, getcontext
-from typing import List, Generator, Tuple
 from functools import cached_property
+from typing import List, Tuple
 
 
 class Circle:
@@ -13,7 +12,12 @@ class Circle:
         getcontext().prec = prec
 
     def __str__(self) -> str:
-        return "\n".join(map(lambda x: " ".join(map(lambda x: "#" if x else " ", x)), self.fill()))
+        return "\n".join(
+            map(
+                lambda x: " ".join(map(lambda x: "#" if x else " ", x)),
+                self.fill(),
+            )
+        )
 
     def fill(self) -> List[List[int]]:
         arr, size = self.blank_output_array()
@@ -25,7 +29,7 @@ class Circle:
         return arr
 
     def logic(self, x: int, y: int, h: int, k: int) -> bool:
-        return Decimal(x - h + 1) ** 2 + Decimal(y - k + 1) ** 2 <= self.radius ** 2
+        return Decimal(x - h + 1) ** 2 + Decimal(y - k + 1) ** 2 <= self.radius**2
 
     def blank_output_array(self) -> Tuple[List[List[int]], int]:
         size = math.ceil(self.diameter) + 2
@@ -37,4 +41,3 @@ class Circle:
 
     def center(self, size: int) -> Tuple[int, int]:
         return (math.ceil(size / 2),) * 2
-    
