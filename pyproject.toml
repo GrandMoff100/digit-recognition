@@ -9,6 +9,10 @@ license = "MIT"
 python = "^3.8"
 
 [tool.poetry.dev-dependencies]
+mypy = "^0.931"
+black = "^22.1.0"
+isort = "^5.10.1"
+pylint = "^2.12.2"
 
 [tool.isort]
 profile = "black"
