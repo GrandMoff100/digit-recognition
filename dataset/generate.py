@@ -12,16 +12,20 @@ from .rectangles import Rectangle
 class Dataset:
     width: int
     minimum_shape_width: int
-    output: Path = Path("shapes")
+    output_training: Path = Path("training")
+    output_testing: Path = Path("testing")
 
     def __init__(self, width: int, minimum_shape_width: int = 4) -> None:
         self.width = width
         self.minimum_shape_width = minimum_shape_width
-        os.system(f"rm -rf {self.output.absolute()}")
-        self.output.mkdir()
+        os.system(f"rm -rf {self.output_training.absolute()}")
+        os.system(f"rm -rf {self.output_testing.absolute()}")
+        self.output_training.mkdir()
+        self.output_testing.mkdir()
 
     def all_circle_sizes(
-        self, prec: int
+        self,
+        prec: int,
     ) -> Tuple[List[List[List[int]]], List[Tuple[int, int]]]:
         circles, sizes = [], []
         i = self.minimum_shape_width
@@ -36,22 +40,31 @@ class Dataset:
             i += 1
         return circles, sizes
 
-    def all_circles(self, prec: int = 5) -> Generator["Output", None, None]:
+    def all_circles(
+        self, prec: int = 5,
+    ) -> Generator[Tuple["Output", bool], None, None]:
         circles, sizes = self.all_circle_sizes(prec)
         for circle, (w, h) in zip(circles, sizes):
             for x in range(self.width - w):
                 for y in range(self.width - h):
                     pixels = Input(circle).pixels
                     if pixels[0][0] == 0:
-                        yield Output(x, y, self.size, pixels)
+                        yield Output(x, y, self.size, pixels), not bool(
+                            random.randint(0, 10)
+                        )
 
     def generate_circles(self) -> None:
-        path = self.output / "circles"
-        path.mkdir()
-        for i, shape in enumerate(self.all_circles()):
-            shape.save(path / f"{str(i).zfill(10)}.png")
+        training = self.output_training / "circles"
+        testing = self.output_testing / "circles"
+        training.mkdir()
+        testing.mkdir()
+        for i, (shape, is_training) in enumerate(self.all_circles()):
+            if is_training:
+                shape.save(training / f"{str(i).zfill(10)}.png")
+            else:
+                shape.save(testing / f"{str(i).zfill(10)}.png")
 
-    def all_rectangles(self) -> Generator["Output", None, None]:
+    def all_rectangles(self) -> Generator[Tuple["Output", bool], None, None]:
         for x in range(self.width - self.minimum_shape_width):
             for y in range(self.width - self.minimum_shape_width):
                 for width in range(self.minimum_shape_width, self.width - x):
@@ -61,13 +74,18 @@ class Dataset:
                             y,
                             self.size,
                             Input(Rectangle(width, height).fill()).pixels,
-                        )
+                        ), not bool(random.randint(0, 10))
 
     def generate_rectangles(self):
-        path = self.output / "rectangles"
-        path.mkdir()
-        for i, shape in enumerate(self.all_rectangles()):
-            shape.save(path / f"{str(i).zfill(10)}.png")
+        training = self.output_training / "rectangles"
+        testing = self.output_testing / "rectangles"
+        training.mkdir()
+        testing.mkdir()
+        for i, (shape, is_training) in enumerate(self.all_rectangles()):
+            if is_training:
+                shape.save(training / f"{str(i).zfill(10)}.png")
+            else:
+                shape.save(testing / f"{str(i).zfill(10)}.png")
 
     def generate_all(self):
         self.generate_rectangles()
@@ -89,8 +107,6 @@ class Output:
                     self.pixels[y + j][x + i] = 1
 
     def save(self, location: Path) -> None:
-        if not bool(random.randint(0, 10)):
-            return
         size = len(self.pixels[0]), len(self.pixels)
         img = Image.new("L", size)
         px = img.load()  # type: ignore
