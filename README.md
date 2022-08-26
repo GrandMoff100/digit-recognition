@@ -1,7 +1,3 @@
-# square-circle-ai
-
-Implementing Rosenblatt's perceptron algorithm (zero intermediate-neuron layers) distinguishing circle vs square images in pure python. (Educational Purposes only)
-
 ## Pre-requisites
 
 ### Generating the Training and Testing Datasets
