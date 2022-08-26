@@ -1,7 +1,8 @@
-import pandas as pd
 import numpy as np
-from model.network import Layer
+import pandas as pd
 
+from model.network import Layer
+from model.train import train
 
 dataset = pd.read_csv(
     "https://raw.githubusercontent.com/cerndb/dist-keras/master/examples/data/mnist.csv"
@@ -16,5 +17,5 @@ my_network = [
     Layer(128, 10),
 ]
 
-
-train(my_network, dataset, labels, epochs=20, batch_size=10, learning_rate=2)
+if __name__ == "__main__":
+    train(my_network, dataset, labels, epochs=20, batch_size=10, learning_rate=2)
