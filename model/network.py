@@ -1,36 +1,81 @@
-import click
-from typing import Generator, List, Optional
+from typing import Generator, Optional
+
+import numpy as np
 
 
-def denest(shape: List[List[int]]) -> Generator[int, None, None]:
-    for layer in shape:
-        for pixel in layer:
-            yield pixel
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    """
+    Sigmoid function.
+    """
+    return 1 / (1 + np.exp(-x))
 
 
-class Network:
-    size: int
+def sigmoid_derivative(x: np.ndarray) -> np.ndarray:
+    """
+    Derivative of the sigmoid function.
+    """
+    return np.multiply(sigmoid(x), 1 - sigmoid(x))
 
-    def __init__(self, size: int, bias: int, weights: Optional[List[float]]) -> None:
-        self.size = size
-        if weights is None:
-            weights = [0] * self.size**2
-        self.weights = weights
-        self.bias = bias
 
-    def feed(self, image: List[List[int]]) -> bool:
-        out = sum([inp * weight for inp, weight in zip(denest(image), self.weights)])
-        return out > self.bias
+def cost(output: np.ndarray, y: np.ndarray) -> float:
+    """
+    Cost function.
+    """
+    return np.sum(np.square(output - y)) / 2
 
-    def adjust(self, image: List[List[int]], direction: int) -> None:
-        for j, layer in enumerate(image):
-            for i, pixel in enumerate(layer):
-                self.weights[j * self.size + i] += direction * pixel
 
-    def train(self, image: List[List[int]], expected: bool) -> None:
-        output = self.feed(image)
-        if output is True and expected is False:
-            self.adjust(image, -1)
-        elif output is False and expected is True:
-            self.adjust(image, 1)
-        # click.echo(self.weights)
+def cost_derivative(output: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    Derivative of the cost function.
+    """
+    return output - y
+
+
+class Layer:
+    def __init__(self, inp_size: int, out_size: int) -> None:
+        self.weights = np.random.rand(inp_size, out_size)
+        self.biases = np.random.rand(out_size)
+        self.weight_gradient = np.zeros((inp_size, out_size))
+        self.biases_gradient = np.zeros(out_size)
+
+    def update_weights(self, learning_rate: float, batch_size: int) -> None:
+        """
+        Updates the weights of the Layer.
+        """
+        self.weights -= self.weight_gradient / batch_size * learning_rate
+        self.weight_gradient = np.zeros(self.weights.shape)
+
+    def update_biases(self, learning_rate: float, batch_size: int) -> None:
+        """
+        Updates the biases of the Layer.
+        """
+        self.biases -= self.biases_gradient / batch_size * learning_rate
+        self.biases_gradient = np.zeros(self.biases.shape)
+
+    def forward(self, inputs: np.ndarray) -> np.ndarray:
+        """
+        Forward pass of the Layer.
+        """
+        return sigmoid(np.matmul(inputs, self.weights) + self.biases)
+
+    def backward(self, inputs: np.ndarray, error: np.ndarray) -> np.ndarray:
+        """
+        Backward pass of the layer.
+        Returns the error of the previous layer.
+        """
+        weighted_error = error * sigmoid_derivative(
+            np.matmul(inputs, self.weights) + self.biases
+        )
+        self.weight_gradient -= np.array(
+            [
+                [previous_neuron * error for error in weighted_error]
+                for previous_neuron in inputs
+            ]
+        )
+        self.biases_gradient -= np.sum(
+            error * sigmoid_derivative(self.forward(inputs)), axis=0
+        )
+        return np.matmul(
+            self.weights,
+            error * sigmoid_derivative(np.matmul(inputs, self.weights) + self.biases),
+        )

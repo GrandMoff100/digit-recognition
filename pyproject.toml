@@ -8,6 +8,8 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 Pillow = "^9.0.1"
+numpy = "^1.23.2"
+pandas = "^1.4.3"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
